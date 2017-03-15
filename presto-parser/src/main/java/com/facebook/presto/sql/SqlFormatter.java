@@ -808,7 +808,8 @@ public final class SqlFormatter
         }
 
         @Override
-        protected Void visitLoadWithDelimited(LoadWithDelimited node, Integer indent) {
+        protected Void visitLoadWithDelimited(LoadWithDelimited node, Integer indent)
+        {
             builder.append("LOAD FROM ");
             String hdfsPath = node.getHdfsPath();
             builder.append(hdfsPath);

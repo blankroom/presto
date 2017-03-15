@@ -238,13 +238,13 @@ class AstBuilder
     @Override
     public Node visitCreateTableWithFiber(SqlBaseParser.CreateTableWithFiberContext context)
     {
-        return new CreateTableWithFiber(getLocation(context),getQualifiedName(context.qualifiedName(0)), getQualifiedName(context.qualifiedName(1)), visit(context.tableElement(),TableElement.class), context.identifier(0).getText(), context.identifier(1).getText());
+        return new CreateTableWithFiber(getLocation(context), getQualifiedName(context.qualifiedName(0)), getQualifiedName(context.qualifiedName(1)), visit(context.tableElement(), TableElement.class), context.identifier(0).getText(), context.identifier(1).getText());
     }
 
     @Override
     public Node visitCreateFunction(SqlBaseParser.CreateFunctionContext context)
     {
-        return new CreateFunction(getLocation(context),getQualifiedName(context.qualifiedName()));
+        return new CreateFunction(getLocation(context), getQualifiedName(context.qualifiedName()));
     }
 
     @Override
