@@ -34,9 +34,11 @@ import com.facebook.presto.sql.tree.ColumnDefinition;
 import com.facebook.presto.sql.tree.Commit;
 import com.facebook.presto.sql.tree.ComparisonExpression;
 import com.facebook.presto.sql.tree.ComparisonExpressionType;
+import com.facebook.presto.sql.tree.CreateFunction;
 import com.facebook.presto.sql.tree.CreateSchema;
 import com.facebook.presto.sql.tree.CreateTable;
 import com.facebook.presto.sql.tree.CreateTableAsSelect;
+import com.facebook.presto.sql.tree.CreateTableWithFiber;
 import com.facebook.presto.sql.tree.CreateView;
 import com.facebook.presto.sql.tree.Cube;
 import com.facebook.presto.sql.tree.CurrentTime;
@@ -82,6 +84,7 @@ import com.facebook.presto.sql.tree.JoinUsing;
 import com.facebook.presto.sql.tree.LambdaExpression;
 import com.facebook.presto.sql.tree.LikeClause;
 import com.facebook.presto.sql.tree.LikePredicate;
+import com.facebook.presto.sql.tree.LoadWithDelimited;
 import com.facebook.presto.sql.tree.LogicalBinaryExpression;
 import com.facebook.presto.sql.tree.LongLiteral;
 import com.facebook.presto.sql.tree.NaturalJoin;
@@ -146,6 +149,7 @@ import com.facebook.presto.sql.tree.Window;
 import com.facebook.presto.sql.tree.WindowFrame;
 import com.facebook.presto.sql.tree.With;
 import com.facebook.presto.sql.tree.WithQuery;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -229,6 +233,24 @@ class AstBuilder
     public Node visitCreateTable(SqlBaseParser.CreateTableContext context)
     {
         return new CreateTable(getLocation(context), getQualifiedName(context.qualifiedName()), visit(context.tableElement(), TableElement.class), context.EXISTS() != null, processTableProperties(context.tableProperties()));
+    }
+
+    @Override
+    public Node visitCreateTableWithFiber(SqlBaseParser.CreateTableWithFiberContext context)
+    {
+        return new CreateTableWithFiber(getLocation(context), getQualifiedName(context.qualifiedName(0)), getQualifiedName(context.qualifiedName(1)), visit(context.tableElement(), TableElement.class), context.identifier(0).getText(), context.identifier(1).getText());
+    }
+
+    @Override
+    public Node visitCreateFunction(SqlBaseParser.CreateFunctionContext context)
+    {
+        return new CreateFunction(getLocation(context), getQualifiedName(context.qualifiedName()));
+    }
+
+    @Override
+    public Node visitLoadWithDelimited(SqlBaseParser.LoadWithDelimitedContext context)
+    {
+        return new LoadWithDelimited(getLocation(context), getHdfsPath(context.hdfsPath()), getQualifiedName(context.qualifiedName()));
     }
 
     private Map<String, Expression> processTableProperties(TablePropertiesContext tablePropertiesContext)
@@ -1489,6 +1511,17 @@ class AstBuilder
                 .collect(toList());
 
         return QualifiedName.of(parts);
+    }
+
+    private static String getHdfsPath(SqlBaseParser.HdfsPathContext context)
+    {
+        //ImmutableList parts = ImmutableList.copyOf(context.identifier().stream().map(ParseTree::getText)));
+        //ImmutableList suffix = parts.subList(1,parts.size()-1);
+        List<String> parts = context
+                .identifier().stream()
+                .map(ParseTree::getText)
+                .collect(toList());
+        return "hdfs://" + Joiner.on('/').join(parts) + "/";
     }
 
     private static boolean isDistinct(SqlBaseParser.SetQuantifierContext setQuantifier)

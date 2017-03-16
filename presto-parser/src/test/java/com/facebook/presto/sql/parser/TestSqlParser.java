@@ -29,9 +29,11 @@ import com.facebook.presto.sql.tree.ColumnDefinition;
 import com.facebook.presto.sql.tree.Commit;
 import com.facebook.presto.sql.tree.ComparisonExpression;
 import com.facebook.presto.sql.tree.ComparisonExpressionType;
+import com.facebook.presto.sql.tree.CreateFunction;
 import com.facebook.presto.sql.tree.CreateSchema;
 import com.facebook.presto.sql.tree.CreateTable;
 import com.facebook.presto.sql.tree.CreateTableAsSelect;
+import com.facebook.presto.sql.tree.CreateTableWithFiber;
 import com.facebook.presto.sql.tree.CreateView;
 import com.facebook.presto.sql.tree.Cube;
 import com.facebook.presto.sql.tree.CurrentTime;
@@ -67,6 +69,7 @@ import com.facebook.presto.sql.tree.JoinCriteria;
 import com.facebook.presto.sql.tree.JoinOn;
 import com.facebook.presto.sql.tree.LambdaExpression;
 import com.facebook.presto.sql.tree.LikeClause;
+import com.facebook.presto.sql.tree.LoadWithDelimited;
 import com.facebook.presto.sql.tree.LogicalBinaryExpression;
 import com.facebook.presto.sql.tree.LongLiteral;
 import com.facebook.presto.sql.tree.NaturalJoin;
@@ -1149,6 +1152,35 @@ public class TestSqlParser
                         ImmutableMap.of()));
     }
 
+    @Test
+    public void testCreateTableWithFiber()
+            throws Exception
+    {
+        assertStatement("create table test (a BOOLEAN, b BIGINT, c DOUBLE, d VARCHAR, e TIMESTAMP) fiber partition by (a) using function abc timestamp by (a)",
+                new CreateTableWithFiber(QualifiedName.of("test"),
+                        QualifiedName.of("abc"),
+                        ImmutableList.of(new ColumnDefinition("a", "BOOLEAN"), new ColumnDefinition("b", "BIGINT"), new ColumnDefinition("c", "DOUBLE"),
+                                new ColumnDefinition("d", "VARCHAR"), new ColumnDefinition("e", "TIMESTAMP")),
+                        "a",
+                        "a"));
+    }
+
+    @Test
+    public void testCreateFunction()
+        throws Exception
+    {
+        assertStatement("create function test",
+                new CreateFunction(QualifiedName.of("test")));
+    }
+
+    @Test
+    public void testLoadWithDelimited()
+        throws Exception
+    {
+        assertStatement("load from hdfs://abc/ as table test delimited by '|'",
+                new LoadWithDelimited("hdfs://abc/",
+                        QualifiedName.of("test")));
+    }
     @Test
     public void testCreateTableAsSelect()
             throws Exception

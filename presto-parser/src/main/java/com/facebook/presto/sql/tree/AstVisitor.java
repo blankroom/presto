@@ -527,6 +527,21 @@ public abstract class AstVisitor<R, C>
         return visitStatement(node, context);
     }
 
+    protected R visitCreateTableWithFiber(CreateTableWithFiber node, C context)
+    {
+        return visitStatement(node, context);
+    }
+
+    protected R visitCreateFunction(CreateFunction node, C context)
+    {
+        return visitStatement(node, context);
+    }
+
+    protected R visitLoadWithDelimited(LoadWithDelimited node, C context)
+    {
+        return visitStatement(node, context);
+    }
+
     protected R visitDropTable(DropTable node, C context)
     {
         return visitDataDefinitionStatement(node, context);

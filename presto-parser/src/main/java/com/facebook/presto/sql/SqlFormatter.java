@@ -21,9 +21,11 @@ import com.facebook.presto.sql.tree.Call;
 import com.facebook.presto.sql.tree.CallArgument;
 import com.facebook.presto.sql.tree.ColumnDefinition;
 import com.facebook.presto.sql.tree.Commit;
+import com.facebook.presto.sql.tree.CreateFunction;
 import com.facebook.presto.sql.tree.CreateSchema;
 import com.facebook.presto.sql.tree.CreateTable;
 import com.facebook.presto.sql.tree.CreateTableAsSelect;
+import com.facebook.presto.sql.tree.CreateTableWithFiber;
 import com.facebook.presto.sql.tree.CreateView;
 import com.facebook.presto.sql.tree.Deallocate;
 import com.facebook.presto.sql.tree.Delete;
@@ -48,6 +50,7 @@ import com.facebook.presto.sql.tree.JoinCriteria;
 import com.facebook.presto.sql.tree.JoinOn;
 import com.facebook.presto.sql.tree.JoinUsing;
 import com.facebook.presto.sql.tree.LikeClause;
+import com.facebook.presto.sql.tree.LoadWithDelimited;
 import com.facebook.presto.sql.tree.NaturalJoin;
 import com.facebook.presto.sql.tree.Node;
 import com.facebook.presto.sql.tree.Prepare;
@@ -746,6 +749,76 @@ public final class SqlFormatter
             if (!node.isWithData()) {
                 builder.append(" WITH NO DATA");
             }
+
+            return null;
+        }
+
+        @Override
+        protected  Void visitCreateTableWithFiber(CreateTableWithFiber node, Integer indent)
+        {
+            builder.append("CREATE TABLE ");
+            String tableName = formatName(node.getTableName());
+            builder.append(tableName).append(" (\n");
+
+            String elementIndent = indentString(indent + 1);
+            String columnList = node.getElements().stream()
+                    .map(element -> {
+                        if (element instanceof ColumnDefinition) {
+                            ColumnDefinition column = (ColumnDefinition) element;
+                            return elementIndent + formatName(column.getName()) + " " + column.getType();
+                        }
+                        if (element instanceof LikeClause) {
+                            LikeClause likeClause = (LikeClause) element;
+                            StringBuilder builder = new StringBuilder(elementIndent);
+                            builder.append("LIKE ")
+                                    .append(formatName(likeClause.getTableName()));
+                            if (likeClause.getPropertiesOption().isPresent()) {
+                                builder.append(" ")
+                                        .append(likeClause.getPropertiesOption().get().name())
+                                        .append(" PROPERTIES");
+                            }
+                            return builder.toString();
+                        }
+                        throw new UnsupportedOperationException("unknown table element: " + element);
+                    }).collect(joining(",\n"));
+            builder.append(columnList);
+            builder.append("\n").append(")");
+            builder.append(" FIBER PARTITION BY (");
+            builder.append(node.getPartitionName());
+            builder.append(")");
+
+            builder.append(" USING FUNCTION ");
+            builder.append(node.getFunctionName());
+            builder.append(" TIMESTAMP BY (");
+            builder.append(node.getTimeStamp());
+            builder.append(")");
+
+            return null;
+        }
+
+        @Override
+        protected Void visitCreateFunction(CreateFunction node, Integer indent)
+        {
+            builder.append("CREATE FUNCTION ");
+            String functionName = formatName(node.getName());
+
+            builder.append(functionName);
+
+            return null;
+        }
+
+        @Override
+        protected Void visitLoadWithDelimited(LoadWithDelimited node, Integer indent)
+        {
+            builder.append("LOAD FROM ");
+            String hdfsPath = node.getHdfsPath();
+            builder.append(hdfsPath);
+
+            builder.append(" AS TABLE ");
+            String tableName = formatName(node.getTableName());
+            builder.append(tableName);
+
+            builder.append(" DELIMITED BY '|'");
 
             return null;
         }
