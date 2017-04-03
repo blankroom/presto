@@ -13,23 +13,24 @@
  */
 package com.facebook.presto.hdfs.metaserver;
 
-import com.facebook.presto.hdfs.HDFSConfig;
-
-import java.sql.SQLException;
+import com.facebook.presto.spi.type.TypeSignature;
+import com.facebook.presto.spi.type.VarcharType;
+import org.testng.annotations.Test;
 
 /**
- * @author jelly.guodong.jin@gmail.com
+ * presto-root
+ *
+ * @author guodong
  */
-public class TestJDBCMetaServer
+public class TypeTest
 {
-    public void testInit() throws SQLException
+    @Test
+    public void test()
     {
-        HDFSConfig.setJdbcDriver("org.postgresql.Driver");
-        HDFSConfig.setMetaserverUri("jdbc:postgresql://127.0.0.1:5432/metaserver");
-        HDFSConfig.setMetaserverUser("jelly");
-        HDFSConfig.setMetaserverPass("jelly");
-        HDFSConfig.setMetaserverStore("hdfs://127.0.0.1:9000/metaserver");
-
-//        JDBCMetaServer metaServer = new JDBCMetaServer();
+        VarcharType varcharType = VarcharType.createVarcharType(100);
+        System.out.println(varcharType.getDisplayName());
+        System.out.println(varcharType.toString());
+        TypeSignature varcharSig = VarcharType.getParametrizedVarcharSignature("100");
+        System.out.println(varcharSig.toString());
     }
 }

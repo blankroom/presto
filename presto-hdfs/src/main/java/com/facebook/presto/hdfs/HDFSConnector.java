@@ -18,11 +18,13 @@ import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorPageSourceProvider;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
-import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorMetadata;
 import com.facebook.presto.spi.transaction.IsolationLevel;
 import com.google.inject.Inject;
 import io.airlift.bootstrap.LifeCycleManager;
 import io.airlift.log.Logger;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.facebook.presto.spi.transaction.IsolationLevel.READ_UNCOMMITTED;
 import static com.facebook.presto.spi.transaction.IsolationLevel.checkConnectorSupports;
@@ -41,77 +43,45 @@ implements Connector
     private final HDFSMetadataFactory hdfsMetadataFactory;
     private final HDFSSplitManager hdfsSplitManager;
     private final HDFSPageSourceProvider hdfsPageSourceProvider;
-//    private final HDFSPageSinkProvider hdfsPageSinkProvider;
 //    private final ConnectorNodePartitioningProvider nodePartitioningProvider;
-//    private final Set<SystemTable> systemTables;
-    private final HDFSTransactionManager transactionManager;
-    private final ClassLoader classLoader;
+
+    private final ConcurrentMap<ConnectorTransactionHandle, HDFSMetadata> transactions = new ConcurrentHashMap<>();
 
     @Inject
     public HDFSConnector(
             LifeCycleManager lifeCycleManager,
             HDFSMetadataFactory hdfsMetadataFactory,
             HDFSSplitManager hdfsSplitManager,
-            HDFSPageSourceProvider hdfsPageSourceProvider,
-            HDFSTransactionManager transactionManager,
-            ClassLoader classLoader)
+            HDFSPageSourceProvider hdfsPageSourceProvider)
     {
         this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
         this.hdfsMetadataFactory = requireNonNull(hdfsMetadataFactory, "hdfsMetadataFactory is null");
         this.hdfsSplitManager = requireNonNull(hdfsSplitManager, "hdfsSplitManager is null");
         this.hdfsPageSourceProvider = requireNonNull(hdfsPageSourceProvider, "hdfsPageSourceProvider is null");
-//        this.hdfsPageSinkProvider = requireNonNull(hdfsPageSinkProvider, "hdfsPageSinkProvider is null");
 //        this.nodePartitioningProvider = requireNonNull(nodePartitioningProvider, "nodePartitioningProvider is null");
-        this.transactionManager = requireNonNull(transactionManager, "transactionManager is null");
-//        this.systemTables = requireNonNull(systemTables, "systemTables is null");
-        this.classLoader = requireNonNull(classLoader, "classLoader is null");
     }
 
     @Override
     public ConnectorTransactionHandle beginTransaction(IsolationLevel isolationLevel, boolean readOnly)
     {
         checkConnectorSupports(READ_UNCOMMITTED, isolationLevel);
-        ConnectorTransactionHandle transactionHandle = new HDFSTransactionHandle();
-        try {
-            transactionManager.put(transactionHandle, hdfsMetadataFactory.create());
-        }
-        finally {
-            return transactionHandle;
-        }
+        HDFSTransactionHandle transaction = new HDFSTransactionHandle();
+        transactions.putIfAbsent(transaction, hdfsMetadataFactory.create());
+        return transaction;
     }
-
-//    @Override
-//    public void commit(ConnectorTransactionHandle transactionHandle)
-//    {
-//        HDFSMetadata metadata = (HDFSMetadata) transactionManager.remove(transactionHandle);
-//        checkArgument(metadata != null, "no such transaction: %s", transactionHandle);
-//        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
-//            metadata.commit();
-//        }
-//    }
-
-//    @Override
-//    public void rollback(ConnectorTransactionHandle transactionHandle)
-//    {
-//        HDFSMetadata metadata = (HDFSMetadata) transactionManager.remove(transactionHandle);
-//        checkArgument(metadata != null, "no such transaction %s", transactionHandle);
-//        try (ThreadContextClassLoader ignored = new ThreadContextClassLoader(classLoader)) {
-//            metadata.rollback();
-//        }
-//    }
 
     /**
      * Guaranteed to be called at most once per transaction. The returned metadata will only be accessed
      * in a single threaded context.
      *
-     * @param transactionHandle
+     * @param transactionHandle transaction handle
      */
     @Override
     public ConnectorMetadata getMetadata(ConnectorTransactionHandle transactionHandle)
     {
-        ConnectorMetadata metadata = transactionManager.get(transactionHandle);
+        HDFSMetadata metadata = transactions.get(transactionHandle);
         checkArgument(metadata != null, "no such transaction: %s", transactionHandle);
-        return new ClassLoaderSafeConnectorMetadata(metadata, classLoader);
+        return hdfsMetadataFactory.create();
     }
 
     @Override
@@ -120,32 +90,17 @@ implements Connector
         return hdfsSplitManager;
     }
 
-    /**
-     * @throws UnsupportedOperationException if this connector does not support reading tables page at a time
-     */
     @Override
     public ConnectorPageSourceProvider getPageSourceProvider()
     {
         return hdfsPageSourceProvider;
     }
 
-    /**
-     * @throws UnsupportedOperationException if this connector does not support writing tables page at a time
-     */
-//    @Override
-//    public ConnectorPageSinkProvider getPageSinkProvider()
-//    {
-//        return hdfsPageSinkProvider;
-//    }
-
-    /**
-     * @throws UnsupportedOperationException if this connector does not support indexes
-     */
-//    @Override
-//    public ConnectorIndexProvider getIndexProvider()
-//    {
-//        return null;
-//    }
+    @Override
+    public void commit(ConnectorTransactionHandle transaction)
+    {
+        checkArgument(transactions.remove(transaction) != null, "no such transaction: %s", transaction);
+    }
 
     /**
      * @throws UnsupportedOperationException if this connector does not support partitioned table layouts
@@ -154,33 +109,6 @@ implements Connector
 //    public ConnectorNodePartitioningProvider getNodePartitioningProvider()
 //    {
 //        return nodePartitioningProvider;
-//    }
-
-    /**
-     * @return the set of system tables provided by this connector
-     */
-//    @Override
-//    public Set<SystemTable> getSystemTables()
-//    {
-//        return systemTables;
-//    }
-
-    /**
-     * @return the schema properties for this connector
-     */
-//    @Override
-//    public List<PropertyMetadata<?>> getSchemaProperties()
-//    {
-//        return null;
-//    }
-
-    /**
-     * @return the table properties for this connector
-     */
-//    @Override
-//    public List<PropertyMetadata<?>> getTableProperties()
-//    {
-//        return null;
 //    }
 
     /**
@@ -194,6 +122,7 @@ implements Connector
     public void shutdown()
     {
         try {
+            hdfsMetadataFactory.shutdown();
             lifeCycleManager.stop();
         }
         catch (Exception e) {

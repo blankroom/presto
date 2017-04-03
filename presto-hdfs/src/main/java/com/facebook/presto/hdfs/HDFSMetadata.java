@@ -27,6 +27,7 @@ import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,12 +45,13 @@ import static java.util.Objects.requireNonNull;
 public class HDFSMetadata
 implements ConnectorMetadata
 {
-//    private final String connectorId;
+    private final String connectorId;
     private final MetaServer metaServer;
 
-    public HDFSMetadata(MetaServer metaServer)
+    @Inject
+    public HDFSMetadata(MetaServer metaServer, HDFSConnectorId connectorId)
     {
-//        this.connectorId = requireNonNull(connectorId, "connectorId is null");
+        this.connectorId = requireNonNull(connectorId.toString(), "connectorId is null");
         this.metaServer = requireNonNull(metaServer, "metaServer is null");
     }
 
@@ -73,7 +75,7 @@ implements ConnectorMetadata
     @Override
     public ConnectorTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName)
     {
-        Optional<HDFSTableHandle> table = metaServer.getTableHandle(tableName.getSchemaName(), tableName.getTableName());
+        Optional<HDFSTableHandle> table = metaServer.getTableHandle(connectorId, tableName.getSchemaName(), tableName.getTableName());
         return table.orElse(null);
     }
 
@@ -95,7 +97,7 @@ implements ConnectorMetadata
         HDFSTableHandle hdfsTable = checkType(table, HDFSTableHandle.class, "table");
         SchemaTableName tableName = hdfsTable.getSchemaTableName();
         // create HDFSTableLayoutHandle
-        HDFSTableLayoutHandle tableLayout = metaServer.getTableLayout(tableName.getSchemaName(), tableName.getTableName()).orElse(null);
+        HDFSTableLayoutHandle tableLayout = metaServer.getTableLayout(connectorId, tableName.getSchemaName(), tableName.getTableName()).orElse(null);
         // ConnectorTableLayout layout = new ConnectorTableLayout(HDFSTableLayoutHandle)
         ConnectorTableLayout layout = getTableLayout(session, tableLayout);
 
@@ -126,7 +128,7 @@ implements ConnectorMetadata
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
     {
-        List<ColumnMetadata> columns = metaServer.getTableColMetadata(tableName.getSchemaName(),
+        List<ColumnMetadata> columns = metaServer.getTableColMetadata(connectorId, tableName.getSchemaName(),
                 tableName.getTableName()).orElse(new ArrayList<>());
         return new ConnectorTableMetadata(tableName, columns);
     }
@@ -157,7 +159,7 @@ implements ConnectorMetadata
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
         HDFSTableHandle table = checkType(tableHandle, HDFSTableHandle.class, "table");
-        List<HDFSColumnHandle> cols = metaServer.getTableColumnHandle(table.getSchemaName(), table.getTableName())
+        List<HDFSColumnHandle> cols = metaServer.getTableColumnHandle(connectorId, table.getSchemaName(), table.getTableName())
                 .orElse(new ArrayList<>());
         Map<String, ColumnHandle> columnMap = new HashMap<>();
         for (HDFSColumnHandle col : cols) {
@@ -193,7 +195,7 @@ implements ConnectorMetadata
         Map<SchemaTableName, List<ColumnMetadata>> tableColumns = new HashMap<>();
         List<SchemaTableName> tableNames = metaServer.listTables(prefix);
         for (SchemaTableName table : tableNames) {
-            List<ColumnMetadata> columnMetadatas = metaServer.getTableColMetadata(table.getSchemaName(),
+            List<ColumnMetadata> columnMetadatas = metaServer.getTableColMetadata(connectorId, table.getSchemaName(),
                     table.getTableName()).orElse(new ArrayList<>());
             tableColumns.putIfAbsent(table, columnMetadatas);
         }
@@ -224,5 +226,14 @@ implements ConnectorMetadata
     public void createTable(ConnectorSession session, ConnectorTableMetadata tableMetadata)
     {
         metaServer.createTable(session, tableMetadata);
+    }
+
+    /**
+     * Creates a table with fiber
+     * */
+    @Override
+    public void createTableWithFiber(ConnectorSession session, ConnectorTableMetadata tableMetadata, String fiberKey, String function, String timeKey)
+    {
+        metaServer.createTableWithFiber(session, tableMetadata, fiberKey, function, timeKey);
     }
 }

@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * @author jelly.guodong.jin@gmail.com
  */
-public class HDFSTransactionHandle
+public class   HDFSTransactionHandle
 implements ConnectorTransactionHandle
 {
     private final UUID uuid;
@@ -57,6 +57,7 @@ implements ConnectorTransactionHandle
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
+
         HDFSTransactionHandle other = (HDFSTransactionHandle) obj;
         return Objects.equals(uuid, other.uuid);
     }

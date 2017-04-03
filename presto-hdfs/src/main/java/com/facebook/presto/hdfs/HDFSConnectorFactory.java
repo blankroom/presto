@@ -20,6 +20,7 @@ import com.facebook.presto.spi.connector.ConnectorFactory;
 import com.google.inject.Injector;
 import io.airlift.bootstrap.Bootstrap;
 import io.airlift.json.JsonModule;
+import io.airlift.log.Logger;
 
 import java.util.Map;
 import static java.util.Objects.requireNonNull;
@@ -34,8 +35,15 @@ implements ConnectorFactory
 {
     private final String name = "hdfs";
 
+//    public HDFSConnectorFactory(String name)
+//    {
+//        logger.info("Connector " + name + " initialized.");
+//    }
+
     public HDFSConnectorFactory()
     {
+        Logger logger = Logger.get(HDFSConnectorFactory.class);
+        logger.info("Connector " + name + " initialized.");
     }
 
     @Override
@@ -58,11 +66,11 @@ implements ConnectorFactory
         try {
             Bootstrap app = new Bootstrap(
                     new JsonModule(),
-                    new HDFSModule(connectorId, config)
+                    new HDFSModule(connectorId, context.getTypeManager())
             );
 
             Injector injector = app
-//                    .strictConfig()
+                    .strictConfig()
                     .doNotInitializeLogging()
                     .setRequiredConfigurationProperties(config)
                     .initialize();

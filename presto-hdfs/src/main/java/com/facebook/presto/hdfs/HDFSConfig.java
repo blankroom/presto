@@ -15,7 +15,6 @@ package com.facebook.presto.hdfs;
 
 import io.airlift.configuration.Config;
 import io.airlift.configuration.ConfigDescription;
-import org.apache.hadoop.fs.Path;
 
 import javax.validation.constraints.NotNull;
 
@@ -27,111 +26,106 @@ import static java.util.Objects.requireNonNull;
  */
 public final class HDFSConfig
 {
-    private static String jdbcDriver;
-    private static String metaserverUri;
-    private static String metaserverUser;
-    private static String metaserverPass;
-    private static String metaserverStore;
+    private String jdbcDriver;
+    private String metaserverUri;
+    private String metaserverUser;
+    private String metaserverPass;
+    private String metaserverStore;
+//    private String metaserverType;
+//    private String connectorName;
 
-    private HDFSConfig()
-    {
-    }
+//    private HDFSConfig()
+//    {
+//    }
 
     @NotNull
-    public static String getJdbcDriver()
+    public String getJdbcDriver()
     {
         return jdbcDriver;
     }
 
     @NotNull
-    public static String getMetaserverUri()
+    public String getMetaserverUri()
     {
         return metaserverUri;
     }
 
     @NotNull
-    public static String getMetaserverUser()
+    public String getMetaserverUser()
     {
         return metaserverUser;
     }
 
     @NotNull
-    public static String getMetaserverPass()
+    public String getMetaserverPass()
     {
         return metaserverPass;
     }
 
     @NotNull
-    public static String getMetaserverStore()
+    public String getMetaserverStore()
     {
         return metaserverStore;
     }
 
+//    @NotNull
+//    public String getMetaserverType()
+//    {
+//        return metaserverType;
+//    }
+
+//    @NotNull
+//    public String getConnectorName()
+//    {
+//        return connectorName;
+//    }
+
     @Config("hdfs.metaserver.driver")
     @ConfigDescription("HDFS metaserver jdbc driver")
-    public static void setJdbcDriver(String jdbcDriver)
+    public void setJdbcDriver(String jdbcDriver)
     {
-        HDFSConfig.jdbcDriver = requireNonNull(jdbcDriver);
+        this.jdbcDriver = requireNonNull(jdbcDriver);
     }
 
     @Config("hdfs.metaserver.uri")
     @ConfigDescription("HDFS metaserver uri")
-    public static void setMetaserverUri(String metaserverUri)
+    public void setMetaserverUri(String metaserverUri)
     {
-        HDFSConfig.metaserverUri = requireNonNull(metaserverUri);
+        this.metaserverUri = requireNonNull(metaserverUri);
     }
 
     @Config("hdfs.metaserver.user")
     @ConfigDescription("HDFS metaserver user name")
-    public static void setMetaserverUser(String metaserverUsere)
+    public void setMetaserverUser(String metaserverUsere)
     {
-        HDFSConfig.metaserverUser = requireNonNull(metaserverUsere);
+        this.metaserverUser = requireNonNull(metaserverUsere);
     }
 
     @Config("hdfs.metaserver.pass")
     @ConfigDescription("HDFS metaserver user password")
-    public static void setMetaserverPass(String metaserverPass)
+    public void setMetaserverPass(String metaserverPass)
     {
-        HDFSConfig.metaserverPass = requireNonNull(metaserverPass);
+        this.metaserverPass = requireNonNull(metaserverPass);
     }
 
     @Config("hdfs.metaserver.store")
     @ConfigDescription("HDFS metaserver storage dir")
-    public static void setMetaserverStore(String metaserverStore)
+    public void setMetaserverStore(String metaserverStore)
     {
-        HDFSConfig.metaserverStore = requireNonNull(metaserverStore);
+        this.metaserverStore = requireNonNull(metaserverStore);
     }
 
-    public static Path formPath(String dirOrFile)
-    {
-        String base = getMetaserverStore();
-        String path = dirOrFile;
-        while (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 2);
-        }
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        return Path.mergePaths(new Path(base), new Path(path));
-    }
+//    @Config("hdfs.metaserver.type")
+//    @ConfigDescription("HDFS metaserver type: jdbc/in-memory")
+//    public void setMetaserverType(String metaserverType)
+//    {
+//        this.metaserverType = requireNonNull(metaserverType);
+//    }
 
-    public static Path formPath(String dirOrFile1, String dirOrFile2)
-    {
-        String base = getMetaserverStore();
-        String path1 = dirOrFile1;
-        String path2 = dirOrFile2;
-        while (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 2);
-        }
-        if (!path1.startsWith("/")) {
-            path1 = "/" + path1;
-        }
-        if (path1.endsWith("/")) {
-            path1 = path1.substring(0, path1.length() - 2);
-        }
-        if (!path2.startsWith("/")) {
-            path2 = "/" + path2;
-        }
-        return Path.mergePaths(Path.mergePaths(new Path(base), new Path(path1)), new Path(path2));
-    }
+//    @Config("connector.name")
+//    @ConfigDescription("Connector name")
+//    public void setConnectorName(String connectorName)
+//    {
+//        this.connectorName = requireNonNull(connectorName);
+//    }
 }

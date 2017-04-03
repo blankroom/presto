@@ -18,6 +18,9 @@ import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -26,22 +29,22 @@ import static java.util.Objects.requireNonNull;
 public class HDFSTableHandle
     implements ConnectorTableHandle
 {
-//    private final String clientId;
+    private final String connectorId;
     private final String tableName;
     private final String schemaName;
-    private String location;
+    private String path;
 
     @JsonCreator
     public HDFSTableHandle(
-//            @JsonProperty("clientId") String clientId,
+            @JsonProperty("connectorId") String connectorId,
             @JsonProperty("schemaName") String schemaName,
             @JsonProperty("tableName") String tableName,
-            @JsonProperty("location") String location)
+            @JsonProperty("path") String path)
     {
-//        this.clientId = requireNonNull(clientId, "clientId is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
         this.tableName = requireNonNull(tableName, "tableName is null");
         this.schemaName = requireNonNull(schemaName, "schemaName is null");
-        this.location = requireNonNull(location, "location is null");
+        this.path = requireNonNull(path, "path is null");
     }
 
     @JsonProperty
@@ -63,29 +66,48 @@ public class HDFSTableHandle
     }
 
     @JsonProperty
-    public String getLocation()
+    public String getConnectorId()
     {
-        return location;
+        return connectorId;
+    }
+
+    @JsonProperty
+    public String getPath()
+    {
+        return path;
     }
 
     @Override
     public int hashCode()
     {
-        // TODO hashCode
-        return 1;
+        return Objects.hash(connectorId, schemaName, tableName, path);
     }
 
     @Override
     public boolean equals(Object obj)
     {
-        // TODO equals
-        return true;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        HDFSTableHandle other = (HDFSTableHandle) obj;
+        return Objects.equals(connectorId, other.connectorId) &&
+                Objects.equals(schemaName, other.schemaName) &&
+                Objects.equals(tableName, other.tableName) &&
+                Objects.equals(path, other.path);
     }
 
     @Override
     public String toString()
     {
-        // TODO toString
-        return "";
+        return toStringHelper(this)
+                .add("connectorId", connectorId)
+                .add("table name", tableName)
+                .add("schema name", schemaName)
+                .add("path", path)
+                .toString();
     }
 }

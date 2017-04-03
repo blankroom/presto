@@ -13,10 +13,17 @@
  */
 package com.facebook.presto.hdfs;
 
+import com.facebook.presto.hdfs.function.Function;
+import com.facebook.presto.hdfs.function.Function0;
 import com.facebook.presto.spi.ConnectorTableLayoutHandle;
+import com.facebook.presto.spi.SchemaTableName;
+import com.facebook.presto.spi.type.IntegerType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -25,28 +32,42 @@ import static java.util.Objects.requireNonNull;
 public class HDFSTableLayoutHandle
 implements ConnectorTableLayoutHandle
 {
-    private final String tableName;                // schema.table
+    private final HDFSTableHandle table;
     private final HDFSColumnHandle fiberColumn;
     private final HDFSColumnHandle timestampColumn;
-    private final String fiberFunc;
+    private final Function fiberFunction;
+    private final StorageFormat storageFormat;
+
+    public HDFSTableLayoutHandle(HDFSTableHandle table)
+    {
+        this(table, new HDFSColumnHandle("null", IntegerType.INTEGER, "", HDFSColumnHandle.ColumnType.REGULAR, ""), new HDFSColumnHandle("null", IntegerType.INTEGER, "", HDFSColumnHandle.ColumnType.REGULAR, ""), new Function0(), StorageFormat.PARQUET);
+    }
 
     @JsonCreator
     public HDFSTableLayoutHandle(
-            @JsonProperty("tableName") String tableName,
+            @JsonProperty("table") HDFSTableHandle table,
             @JsonProperty("fiberColumn") HDFSColumnHandle fiberColumn,
             @JsonProperty("timestampColumn") HDFSColumnHandle timestampColumn,
-            @JsonProperty("fiberFunc") String fiberFunc)
+            @JsonProperty("fiberFunction") Function fiberFunction,
+            @JsonProperty("storageFormat") StorageFormat storageFormat)
     {
-        this.tableName = requireNonNull(tableName, "tableName is null");
+        this.table = requireNonNull(table, "table is null");
         this.fiberColumn = requireNonNull(fiberColumn, "fiberColumn is null");
         this.timestampColumn = requireNonNull(timestampColumn, "timestampColumn is null");
-        this.fiberFunc = requireNonNull(fiberFunc, "fiberFunc is null");
+        this.fiberFunction = requireNonNull(fiberFunction, "fiberFunc is null");
+        this.storageFormat = requireNonNull(storageFormat, "storageFormat is null");
     }
 
     @JsonProperty
-    public String getTableName()
+    public HDFSTableHandle getTable()
     {
-        return tableName;
+        return table;
+    }
+
+    @JsonProperty
+    public SchemaTableName getSchemaTableName()
+    {
+        return new SchemaTableName(table.getSchemaName(), table.getTableName());
     }
 
     @JsonProperty
@@ -62,10 +83,50 @@ implements ConnectorTableLayoutHandle
     }
 
     @JsonProperty
-    public String getFiberFunc()
+    public Function getFiberFunction()
     {
-        return fiberFunc;
+        return fiberFunction;
     }
 
-    // TODO Override toString(), hashCode(), and equals()
+    @JsonProperty
+    public StorageFormat getStorageFormat()
+    {
+        return storageFormat;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(table, fiberColumn, timestampColumn, fiberFunction, storageFormat);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        HDFSTableLayoutHandle other = (HDFSTableLayoutHandle) obj;
+        return Objects.equals(table, other.table) &&
+                Objects.equals(fiberColumn, other.fiberColumn) &&
+                Objects.equals(timestampColumn, other.timestampColumn) &&
+                Objects.equals(fiberFunction, other.fiberFunction) &&
+                Objects.equals(storageFormat, other.storageFormat);
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(this)
+                .add("table", table)
+                .add("fiber column", fiberColumn)
+                .add("timestamp column", timestampColumn)
+                .add("fiber function", fiberFunction)
+                .add("storage format", storageFormat)
+                .toString();
+    }
 }

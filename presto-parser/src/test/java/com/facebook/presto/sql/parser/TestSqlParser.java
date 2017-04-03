@@ -1768,4 +1768,10 @@ public class TestSqlParser
         String indent = "    ";
         return indent + value.trim().replaceAll("\n", "\n" + indent);
     }
+
+//    @Test
+//    public void testQualifiedNameInSelectItem() {
+//        String sql = "select tbl1.col1 from tbl1";
+//        Statement statement = SQL_PARSER.createStatement(sql);
+//    }
 }

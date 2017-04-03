@@ -11,11 +11,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.facebook.presto.hdfs;
+package com.facebook.presto.hdfs.exception;
+
+import com.facebook.presto.spi.PrestoException;
+import org.apache.hadoop.fs.Path;
 
 /**
  * @author jelly.guodong.jin@gmail.com
  */
-public class HDFSSchema
+public class HdfsSplitNotOpenException
+extends PrestoException
 {
+    public HdfsSplitNotOpenException(Path path)
+    {
+        super(HDFSErrorCode.HDFS_SPLIT_NOT_OPEN, "HDFS Split " + path + " cannot open");
+    }
 }

@@ -522,12 +522,12 @@ public abstract class AstVisitor<R, C>
         return visitDataDefinitionStatement(node, context);
     }
 
-    protected R visitCreateTableAsSelect(CreateTableAsSelect node, C context)
+    protected R visitCreateTableWithFiber(CreateTableWithFiber node, C context)
     {
-        return visitStatement(node, context);
+        return visitDataDefinitionStatement(node, context);
     }
 
-    protected R visitCreateTableWithFiber(CreateTableWithFiber node, C context)
+    protected R visitCreateTableAsSelect(CreateTableAsSelect node, C context)
     {
         return visitStatement(node, context);
     }

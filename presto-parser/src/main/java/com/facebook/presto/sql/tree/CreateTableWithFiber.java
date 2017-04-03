@@ -13,6 +13,8 @@
  */
 package com.facebook.presto.sql.tree;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,42 +22,60 @@ import java.util.Optional;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
-public class CreateTableWithFiber extends Statement
+/**
+ * presto-root
+ *
+ * @author guodong
+ */
+public class CreateTableWithFiber
+    extends DataDefinitionStatement
 {
-    private final QualifiedName tableName;
-    private final QualifiedName functionName;
+    private final QualifiedName name;
     private final List<TableElement> elements;
-    private final String partitionName;
-    private final String timeStamp;
+    private final String fibK;
+    private final QualifiedName function;
+    private final String timeK;
 
-    public CreateTableWithFiber(QualifiedName tableName, QualifiedName functionName, List<TableElement> elements, String partitionName, String timeStamp)
+    public CreateTableWithFiber(
+            QualifiedName name,
+            List<TableElement> elements,
+            String fibK,
+            QualifiedName function,
+            String timeK)
     {
-        this(Optional.empty(), tableName, functionName, elements, partitionName, timeStamp);
+        this(Optional.empty(), name, elements, fibK, function, timeK);
     }
 
-    public CreateTableWithFiber(NodeLocation location, QualifiedName tableName, QualifiedName functionName, List<TableElement> elements, String partitionName, String timeStamp)
+    public CreateTableWithFiber(
+            NodeLocation location,
+            QualifiedName name,
+            List<TableElement> elements,
+            String fibK,
+            QualifiedName function,
+            String timeK)
     {
-        this(Optional.of(location), tableName, functionName, elements, partitionName, timeStamp);
+        this(Optional.of(location), name, elements, fibK, function, timeK);
     }
 
-    private CreateTableWithFiber(Optional<NodeLocation> location, QualifiedName tableName, QualifiedName functionName, List<TableElement> elements, String partitionName, String timeStamp)
+    private CreateTableWithFiber(
+            Optional<NodeLocation> location,
+            QualifiedName name,
+            List<TableElement> elements,
+            String fibK,
+            QualifiedName function,
+            String timeK)
     {
         super(location);
-        this.tableName = requireNonNull(tableName, "tableName is null");
-        this.functionName = requireNonNull(functionName, "functionName is null");
-        this.elements = elements;
-        this.partitionName = partitionName;
-        this.timeStamp = timeStamp;
+        this.name = requireNonNull(name, "table name is null");
+        this.elements = ImmutableList.copyOf(requireNonNull(elements, "elements is null"));
+        this.fibK = requireNonNull(fibK, "fiber key is null");
+        this.function = requireNonNull(function, "function is null");
+        this.timeK = requireNonNull(timeK, "timestamp key is null");
     }
 
-    public QualifiedName getTableName()
+    public QualifiedName getName()
     {
-        return tableName;
-    }
-
-    public QualifiedName getFunctionName()
-    {
-        return functionName;
+        return name;
     }
 
     public List<TableElement> getElements()
@@ -63,14 +83,19 @@ public class CreateTableWithFiber extends Statement
         return elements;
     }
 
-    public String getPartitionName()
+    public String getFibK()
     {
-        return partitionName;
+        return fibK;
     }
 
-    public String getTimeStamp()
+    public QualifiedName getFunction()
     {
-        return timeStamp;
+        return function;
+    }
+
+    public String getTimeK()
+    {
+        return timeK;
     }
 
     @Override
@@ -79,11 +104,13 @@ public class CreateTableWithFiber extends Statement
         return visitor.visitCreateTableWithFiber(this, context);
     }
 
+    @Override
     public int hashCode()
     {
-        return Objects.hash(tableName, functionName, elements, partitionName, timeStamp);
+        return Objects.hash(name, elements, fibK, function, timeK);
     }
 
+    @Override
     public boolean equals(Object obj)
     {
         if (this == obj) {
@@ -92,22 +119,23 @@ public class CreateTableWithFiber extends Statement
         if ((obj == null) || (getClass() != obj.getClass())) {
             return false;
         }
-        CreateTableWithFiber o = (CreateTableWithFiber) obj;
-        return Objects.equals(tableName, o.tableName)
-                && Objects.equals(functionName, o.functionName)
-                && Objects.equals(elements, o.elements)
-                && Objects.equals(partitionName, o.partitionName)
-                && Objects.equals(timeStamp, o.timeStamp);
+        CreateTableWithFiber other = (CreateTableWithFiber) obj;
+        return Objects.equals(name, other.name) &&
+                Objects.equals(elements, other.elements) &&
+                Objects.equals(fibK, other.fibK) &&
+                Objects.equals(function, other.function) &&
+                Objects.equals(timeK, other.timeK);
     }
 
+    @Override
     public String toString()
     {
         return toStringHelper(this)
-                .add("tableName", tableName)
-                .add("functionName", functionName)
-                .add("elementts", elements)
-                .add("partitionName", partitionName)
-                .add("timeStamp", timeStamp)
+                .add("name", name)
+                .add("elements", elements)
+                .add("fiber key", fibK)
+                .add("function", function)
+                .add("timestamp key", timeK)
                 .toString();
     }
 }

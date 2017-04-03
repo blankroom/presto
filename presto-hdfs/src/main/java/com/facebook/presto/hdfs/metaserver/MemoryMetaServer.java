@@ -45,25 +45,25 @@ public class MemoryMetaServer
     }
 
     @Override
-    public Optional<HDFSTableHandle> getTableHandle(String databaseName, String tableName)
+    public Optional<HDFSTableHandle> getTableHandle(String connectorId, String databaseName, String tableName)
     {
         return null;
     }
 
     @Override
-    public Optional<HDFSTableLayoutHandle> getTableLayout(String databaseName, String tableName)
+    public Optional<HDFSTableLayoutHandle> getTableLayout(String connectorId, String databaseName, String tableName)
     {
         return null;
     }
 
     @Override
-    public Optional<List<ColumnMetadata>> getTableColMetadata(String databaseName, String tableName)
+    public Optional<List<ColumnMetadata>> getTableColMetadata(String connectorId, String databaseName, String tableName)
     {
         return null;
     }
 
     @Override
-    public Optional<List<HDFSColumnHandle>> getTableColumnHandle(String databaseName, String tableName)
+    public Optional<List<HDFSColumnHandle>> getTableColumnHandle(String connectorId, String databaseName, String tableName)
     {
         return null;
     }
@@ -75,6 +75,16 @@ public class MemoryMetaServer
 
     @Override
     public void createTable(ConnectorSession session, ConnectorTableMetadata table)
+    {
+    }
+
+    @Override
+    public void createTableWithFiber(ConnectorSession session, ConnectorTableMetadata tableMetadata, String fiberKey, String function, String timeKey)
+    {
+    }
+
+    @Override
+    public void shutdown()
     {
     }
 }

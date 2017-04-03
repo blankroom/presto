@@ -13,6 +13,9 @@
  */
 package com.facebook.presto.hdfs;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -24,10 +27,18 @@ public class HDFSConnectorId
 {
     private final String connectorId;
 
-    public HDFSConnectorId(String connectorId)
+    @JsonCreator
+    public HDFSConnectorId(
+            @JsonProperty("connectorId") String connectorId)
     {
         requireNonNull(connectorId, "connectorId is null");
         this.connectorId = connectorId;
+    }
+
+    @JsonProperty
+    public String getConnectorId()
+    {
+        return connectorId;
     }
 
     @Override

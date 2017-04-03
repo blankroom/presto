@@ -18,6 +18,9 @@ import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -38,18 +41,21 @@ implements ColumnHandle
     private final Type type;
     private final String comment;
     private final ColumnType colType;
+    private final String connectorId;
 
     @JsonCreator
     public HDFSColumnHandle(
             @JsonProperty("name") String name,
             @JsonProperty("type") Type type,
             @JsonProperty("comment") String comment,
-            @JsonProperty("columnType") ColumnType colType)
+            @JsonProperty("colType") ColumnType colType,
+            @JsonProperty("connectorId") String connectorId)
     {
         this.name = requireNonNull(name, "name is null");
         this.type = requireNonNull(type, "type is null");
         this.comment = requireNonNull(comment, "comment is null");
         this.colType = requireNonNull(colType, "col type is null");
+        this.connectorId = requireNonNull(connectorId, "connectorId is null");
     }
 
     @JsonProperty
@@ -74,5 +80,47 @@ implements ColumnHandle
     public ColumnType getColType()
     {
         return colType;
+    }
+
+    @JsonProperty
+    public String getConnectorId()
+    {
+        return connectorId;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(name, type, comment, colType, connectorId);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        HDFSColumnHandle other = (HDFSColumnHandle) obj;
+        return Objects.equals(name, other.name) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(comment, other.comment) &&
+                Objects.equals(colType, other.colType) &&
+                Objects.equals(connectorId, other.connectorId);
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(this)
+                .add("name", name)
+                .add("type", type)
+                .add("comment", comment)
+                .add("column type", colType)
+                .add("connector id", connectorId)
+                .toString();
     }
 }

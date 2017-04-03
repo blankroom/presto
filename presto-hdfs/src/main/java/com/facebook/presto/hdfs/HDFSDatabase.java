@@ -16,6 +16,9 @@ package com.facebook.presto.hdfs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -24,18 +27,15 @@ import static java.util.Objects.requireNonNull;
 public class HDFSDatabase
 {
     private final String name;
-    private final String comment;
-    private final String location;
-    private final String owner;
+    private String location;
+    private String id;
 
     @JsonCreator
     public HDFSDatabase(
             @JsonProperty("name") String name)
     {
         this.name = requireNonNull(name, "name is null");
-        this.comment = "db " + name;
-        this.location = HDFSConfig.formPath(name).toString();
-        this.owner = "default";
+        this.location = "";
     }
 
     @JsonProperty
@@ -44,10 +44,9 @@ public class HDFSDatabase
         return name;
     }
 
-    @JsonProperty
-    public String getComment()
+    public void setLocation(String location)
     {
-        return comment;
+        this.location = location;
     }
 
     @JsonProperty
@@ -56,9 +55,42 @@ public class HDFSDatabase
         return location;
     }
 
-    @JsonProperty
-    public String getOwner()
+    public void setId(String id)
     {
-        return owner;
+        this.id = id;
+    }
+
+    @JsonProperty
+    public String getId()
+    {
+        return id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(name);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        HDFSDatabase other = (HDFSDatabase) obj;
+        return Objects.equals(name, other.name);
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(this)
+                .add("name", name)
+                .toString();
     }
 }
