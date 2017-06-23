@@ -755,49 +755,6 @@ public final class SqlFormatter
         }
 
         @Override
-        protected  Void visitCreateTableWithFiber(CreateTableWithFiber node, Integer indent)
-        {
-            builder.append("CREATE TABLE ");
-            String tableName = formatName(node.getTableName());
-            builder.append(tableName).append(" (\n");
-
-            String elementIndent = indentString(indent + 1);
-            String columnList = node.getElements().stream()
-                    .map(element -> {
-                        if (element instanceof ColumnDefinition) {
-                            ColumnDefinition column = (ColumnDefinition) element;
-                            return elementIndent + formatName(column.getName()) + " " + column.getType();
-                        }
-                        if (element instanceof LikeClause) {
-                            LikeClause likeClause = (LikeClause) element;
-                            StringBuilder builder = new StringBuilder(elementIndent);
-                            builder.append("LIKE ")
-                                    .append(formatName(likeClause.getTableName()));
-                            if (likeClause.getPropertiesOption().isPresent()) {
-                                builder.append(" ")
-                                        .append(likeClause.getPropertiesOption().get().name())
-                                        .append(" PROPERTIES");
-                            }
-                            return builder.toString();
-                        }
-                        throw new UnsupportedOperationException("unknown table element: " + element);
-                    }).collect(joining(",\n"));
-            builder.append(columnList);
-            builder.append("\n").append(")");
-            builder.append(" FIBER PARTITION BY (");
-            builder.append(node.getPartitionName());
-            builder.append(")");
-
-            builder.append(" USING FUNCTION ");
-            builder.append(node.getFunctionName());
-            builder.append(" TIMESTAMP BY (");
-            builder.append(node.getTimeStamp());
-            builder.append(")");
-
-            return null;
-        }
-
-        @Override
         protected Void visitCreateFunction(CreateFunction node, Integer indent)
         {
             builder.append("CREATE FUNCTION ");

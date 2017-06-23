@@ -33,7 +33,6 @@ import com.facebook.presto.sql.tree.CreateFunction;
 import com.facebook.presto.sql.tree.CreateSchema;
 import com.facebook.presto.sql.tree.CreateTable;
 import com.facebook.presto.sql.tree.CreateTableAsSelect;
-import com.facebook.presto.sql.tree.CreateTableWithFiber;
 import com.facebook.presto.sql.tree.CreateView;
 import com.facebook.presto.sql.tree.Cube;
 import com.facebook.presto.sql.tree.CurrentTime;
@@ -1150,19 +1149,6 @@ public class TestSqlParser
                                         Optional.of(LikeClause.PropertiesOption.EXCLUDING))),
                         true,
                         ImmutableMap.of()));
-    }
-
-    @Test
-    public void testCreateTableWithFiber()
-            throws Exception
-    {
-        assertStatement("create table test (a BOOLEAN, b BIGINT, c DOUBLE, d VARCHAR, e TIMESTAMP) fiber partition by (a) using function abc timestamp by (a)",
-                new CreateTableWithFiber(QualifiedName.of("test"),
-                        QualifiedName.of("abc"),
-                        ImmutableList.of(new ColumnDefinition("a", "BOOLEAN"), new ColumnDefinition("b", "BIGINT"), new ColumnDefinition("c", "DOUBLE"),
-                                new ColumnDefinition("d", "VARCHAR"), new ColumnDefinition("e", "TIMESTAMP")),
-                        "a",
-                        "a"));
     }
 
     @Test
